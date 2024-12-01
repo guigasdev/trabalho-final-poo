@@ -1,15 +1,23 @@
 import exceptions.LivroNaoEncontradoException;
 import models.*;
+import services.ArquivoUtil;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 public class Biblioteca {
 
     private services.Biblioteca biblioteca;
+    private List<Usuario> usuarios;
     private Scanner scanner;
+    private final String caminhoArquivoUsuarios = "usuarios.txt";
 
     public Biblioteca() {
         biblioteca = new services.Biblioteca("livros.txt");
+        usuarios = new ArrayList<>();
+        carregarUsuarios();
         scanner = new Scanner(System.in);
     }
 
@@ -54,43 +62,6 @@ public class Biblioteca {
                     System.out.println("Opção inválida! Tente novamente.");
             }
         }
-    }
-    private void criarUsuario() {
-        System.out.print("Digite o nome do usuário: ");
-        String nome = scanner.nextLine();
-
-        System.out.print("Digite a idade do usuário: ");
-        int idade = scanner.nextInt();
-        scanner.nextLine();
-
-        System.out.println("Escolha o tipo de usuário:");
-        System.out.println("1. Aluno");
-        System.out.println("2. Professor");
-        System.out.print("Opção: ");
-        int tipoUsuario = scanner.nextInt();
-        scanner.nextLine();
-
-        Usuario usuario = null;
-
-        if (tipoUsuario == 1) {
-            System.out.print("Digite a matrícula do aluno: ");
-            String matricula = scanner.nextLine();
-            usuario = new UsuarioAluno(nome, matricula);
-        } else if (tipoUsuario == 2) {
-            System.out.print("Digite a matrícula do professor: ");
-            String matricula = scanner.nextLine();
-            usuario = new UsuarioProfessor(nome, matricula);
-        } else {
-            System.out.println("Opção de tipo de usuário inválida!");
-            return;
-        }
-
-        // Salvar o usuário no arquivo
-        usuarios.add(usuario);
-        salvarUsuarios();
-
-        System.out.println("Usuário criado com sucesso!");
-        usuario.exibir();
     }
 
     private void adicionarLivro() {
@@ -151,6 +122,7 @@ public class Biblioteca {
         String criterio = scanner.nextLine();
         biblioteca.buscar(criterio);
     }
+
     private void criarUsuario() {
         System.out.print("Digite o nome do usuário: ");
         String nome = scanner.nextLine();
@@ -181,8 +153,60 @@ public class Biblioteca {
             return;
         }
 
+        usuarios.add(usuario);
+        salvarUsuarios();
         System.out.println("Usuário criado com sucesso!");
         usuario.exibir();
+    }
+
+    private void listarUsuarios() {
+        System.out.println("\n--- Lista de Usuários ---");
+        if (usuarios.isEmpty()) {
+            System.out.println("Nenhum usuário encontrado.");
+        } else {
+            for (Usuario usuario : usuarios) {
+                usuario.exibir();
+            }
+        }
+    }
+
+    private void salvarUsuarios() {
+        try {
+            StringBuilder conteudo = new StringBuilder();
+            for (Usuario usuario : usuarios) {
+                conteudo.append(usuario.getNome()).append(" - ")
+                        .append(usuario.getMatricula()).append(" - ")
+                        .append(usuario instanceof UsuarioAluno ? "Aluno" : "Professor")
+                        .append("\n");
+            }
+            ArquivoUtil.escreverArquivo(caminhoArquivoUsuarios, conteudo.toString().trim());
+        } catch (IOException e) {
+            System.out.println("Erro ao salvar os usuários: " + e.getMessage());
+        }
+    }
+
+    private void carregarUsuarios() {
+        try {
+            String conteudo = ArquivoUtil.lerArquivo(caminhoArquivoUsuarios);
+            if (!conteudo.isEmpty()) {
+                String[] linhas = conteudo.split("\n");
+                for (String linha : linhas) {
+                    String[] dados = linha.split(" - ");
+                    if (dados.length == 3) {
+                        String nome = dados[0].trim();
+                        String matricula = dados[1].trim();
+                        String tipo = dados[2].trim();
+                        if (tipo.equalsIgnoreCase("Aluno")) {
+                            usuarios.add(new UsuarioAluno(nome, matricula));
+                        } else if (tipo.equalsIgnoreCase("Professor")) {
+                            usuarios.add(new UsuarioProfessor(nome, matricula));
+                        }
+                    }
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Erro ao carregar os usuários: " + e.getMessage());
+        }
     }
 
     public static void main(String[] args) {

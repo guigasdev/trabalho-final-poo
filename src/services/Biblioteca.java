@@ -33,9 +33,9 @@ public class Biblioteca implements Buscavel, Relatavel {
                         String titulo = dados[0].trim();
                         String autor = dados[1].trim();
                         String tipo = dados[2].trim();
-                        if (tipo.equals("Físico")) {
+                        if (tipo.equalsIgnoreCase("Físico")) {
                             livros.add(new LivroFisico(titulo, autor));
-                        } else if (tipo.equals("Digital")) {
+                        } else if (tipo.equalsIgnoreCase("Digital")) {
                             livros.add(new LivroDigital(titulo, autor));
                         }
                     }
@@ -47,8 +47,14 @@ public class Biblioteca implements Buscavel, Relatavel {
     }
 
     public void adicionarLivro(Livro livro) {
+        if (livros.stream().anyMatch(l -> l.getTitulo().equalsIgnoreCase(livro.getTitulo()))) {
+            System.out.println("Erro: Já existe um livro com o título '" + livro.getTitulo() + "'.");
+            return;
+        }
+
         livros.add(livro);
         salvarLivros();
+        System.out.println("Livro '" + livro.getTitulo() + "' adicionado com sucesso!");
     }
 
     public List<Livro> listarLivros() {
@@ -60,10 +66,11 @@ public class Biblioteca implements Buscavel, Relatavel {
             if (livro.getTitulo().equalsIgnoreCase(titulo)) {
                 livros.remove(livro);
                 salvarLivros();
+                System.out.println("Livro '" + titulo + "' emprestado com sucesso!");
                 return;
             }
         }
-        throw new LivroNaoEncontradoException("Livro " + titulo + "não encontrado!");
+        throw new LivroNaoEncontradoException("Livro '" + titulo + "' não encontrado!");
     }
 
     @Override
@@ -74,6 +81,7 @@ public class Biblioteca implements Buscavel, Relatavel {
         if (resultados.isEmpty()) {
             System.out.println("Nenhum livro encontrado para o critério: " + criterio);
         } else {
+            System.out.println("Livros encontrados:");
             resultados.forEach(Livro::exibir);
         }
     }
