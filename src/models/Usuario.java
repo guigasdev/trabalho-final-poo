@@ -17,5 +17,5 @@ public abstract class Usuario {
         return matricula;
     }
 
-    public abstract void exibir();  // Método abstrato para exibir informações do usuário
+    public abstract void exibir();  
 }
